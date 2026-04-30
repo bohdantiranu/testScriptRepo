@@ -167,7 +167,15 @@
     setHidden("mimeType", "");
     setHidden("uploadOk", "false");
     setHidden("uploadError", message || "Upload failed");
-    state.lastUploadedFileSignature = null;
+    
+    state.lastUploadedFileSignature = getFileSignature(file);
+
+    const input = byId("attachInput");
+    
+    if (input) {
+      input.value = "";
+    }
+    
     setRemoveButtonVisible(false);
     updateSubmitState();
   }
