@@ -589,35 +589,35 @@
     setStatus("No file attached", "#374151");
   }
 
-  function validateBeforeSubmit(event) {
-    setHidden("attachmentRequired", CONFIG.requireAttachment ? "true" : "false");
+  // function validateBeforeSubmit(event) {
+  //   setHidden("attachmentRequired", CONFIG.requireAttachment ? "true" : "false");
 
-    if (!getHidden("ticketId")) {
-      event.preventDefault();
-      setStatus("Ticket ID is missing", "#b91c1c");
-      return false;
-    }
+  //   if (!getHidden("ticketId")) {
+  //     event.preventDefault();
+  //     setStatus("Ticket ID is missing", "#b91c1c");
+  //     return false;
+  //   }
 
-    if (state.uploadInProgress) {
-      event.preventDefault();
-      setStatus("Please wait until the attachment upload is finished", "#b91c1c");
-      return false;
-    }
+  //   if (state.uploadInProgress) {
+  //     event.preventDefault();
+  //     setStatus("Please wait until the attachment upload is finished", "#b91c1c");
+  //     return false;
+  //   }
 
-    if (CONFIG.requireAttachment && !isCurrentFileUploaded()) {
-      event.preventDefault();
-      setStatus("Attachment is required before submit", "#b91c1c");
-      return false;
-    }
+  //   if (CONFIG.requireAttachment && !isCurrentFileUploaded()) {
+  //     event.preventDefault();
+  //     setStatus("Attachment is required before submit", "#b91c1c");
+  //     return false;
+  //   }
 
-    if (getSelectedFile() && !isCurrentFileUploaded()) {
-      event.preventDefault();
-      setStatus("Selected file was not uploaded successfully", "#b91c1c");
-      return false;
-    }
+  //   if (getSelectedFile() && !isCurrentFileUploaded()) {
+  //     event.preventDefault();
+  //     setStatus("Selected file was not uploaded successfully", "#b91c1c");
+  //     return false;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   function attachGlobalUiHandlers() {
     document.addEventListener("click", (event) => {
@@ -645,14 +645,14 @@
     updateSubmitState();
 
     const form = getForm();
-    if (form) {
-      form.addEventListener("submit", validateBeforeSubmit);
-    } else {
-      const replyBtn = getReplyButton();
-      if (replyBtn) {
-        replyBtn.addEventListener("click", validateBeforeSubmit);
-      }
-    }
+    // if (form) {
+    //   form.addEventListener("submit", validateBeforeSubmit);
+    // } else {
+    //   const replyBtn = getReplyButton();
+    //   if (replyBtn) {
+    //     replyBtn.addEventListener("click", validateBeforeSubmit);
+    //   }
+    // }
 
     const removeBtn = byId("removeAttachBtn");
     if (removeBtn) {
