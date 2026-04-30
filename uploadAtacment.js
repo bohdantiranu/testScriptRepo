@@ -302,7 +302,7 @@
     const emails = getSelectedEmailsFromSelect(select);
 
     setHidden(`${kind}Emails`, emails.join(","));
-    setHidden(`${kind}EmailsJson`, JSON.stringify(emails));
+    setHidden(`${kind}EmailsJson`, emails.length > 0 ? JSON.stringify(emails) : "[]");
 
     const summary = byId(`${kind}SelectedSummary`);
     if (summary) {
