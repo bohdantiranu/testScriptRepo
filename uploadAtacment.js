@@ -156,6 +156,13 @@
     setHidden("uploadOk", "true");
     setHidden("uploadError", "");
     state.lastUploadedFileSignature = getFileSignature(file);
+
+    const input = byId("attachInput");
+    
+    if (input) {
+      input.value = "";
+    }
+    
     setRemoveButtonVisible(true);
     updateSubmitState();
   }
