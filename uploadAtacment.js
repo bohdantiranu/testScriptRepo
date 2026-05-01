@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    uploadUrl: "https://middle.wow24-7.net:8081/api/uploads",
+    uploadUrl: "https://middle.wow24-7.net:443/api/uploads",
     requireAttachment: false,
     maxFileSizeBytes: 20 * 1024 * 1024,
     requestTimeoutMs: 60_000,
@@ -162,7 +162,7 @@
     if (input) {
       input.value = "";
     }
-    
+
     setRemoveButtonVisible(true);
     updateSubmitState();
   }
