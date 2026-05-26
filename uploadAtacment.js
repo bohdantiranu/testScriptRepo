@@ -187,7 +187,6 @@
     setHidden("uploadOk", "false");
     setHidden("uploadError", message || "Upload failed");
 
-    // FIX: previous version used getFileSignature(file), but file is not defined here.
     state.lastUploadedFileSignature = null;
 
     const input = byId("attachInput");
@@ -342,6 +341,38 @@
       .filter(Boolean);
   }
 
+  function getManualRecipientEmails(kind) {
+    const fieldName = kind === "cc" ? "defaultCcOptions" : "defaultBccOptions";
+    const input = document.querySelector(`input[type="text"][name="${fieldName}"]`);
+
+    if (!input) {
+      return [];
+    }
+
+    return parseRecipientSource(input.value)
+      .map((item) => String(item.email || "").trim())
+      .filter(Boolean);
+  }
+
+  function mergeEmails(selectedEmails, manualEmails) {
+    const seen = new Set();
+    const result = [];
+
+    [...selectedEmails, ...manualEmails].forEach((email) => {
+      const normalized = String(email || "").trim();
+      const key = normalized.toLowerCase();
+
+      if (!key || seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+      result.push(normalized);
+    });
+
+    return result;
+  }
+
   function updateRecipientHiddenValues(kind) {
     const select = byId(`${kind}Select`);
 
@@ -349,7 +380,9 @@
       return;
     }
 
-    const emails = getSelectedEmailsFromSelect(select);
+    const selectedEmails = getSelectedEmailsFromSelect(select);
+    const manualEmails = getManualRecipientEmails(kind);
+    const emails = mergeEmails(selectedEmails, manualEmails);
 
     setHidden(`${kind}Emails`, emails.join(","));
     setHidden(`${kind}EmailsJson`, emails.length > 0 ? JSON.stringify(emails) : "[]");
@@ -379,7 +412,9 @@
       return;
     }
 
-    const emails = getSelectedEmailsFromSelect(instance.select);
+    const selectedEmails = getSelectedEmailsFromSelect(instance.select);
+    const manualEmails = getManualRecipientEmails(kind);
+    const emails = mergeEmails(selectedEmails, manualEmails);
 
     if (emails.length === 0) {
       instance.toggle.textContent = instance.placeholder;
@@ -535,7 +570,6 @@
       return;
     }
 
-    // FIX: JS treats this select as multi-select, so enforce multiple mode.
     select.multiple = true;
 
     const options = dedupeRecipientItems(
@@ -568,13 +602,26 @@
     updateRecipientHiddenValues(kind);
   }
 
+  function attachManualRecipientInputHandlers() {
+    const ccInput = document.querySelector('input[type="text"][name="defaultCcOptions"]');
+    const bccInput = document.querySelector('input[type="text"][name="defaultBccOptions"]');
+
+    if (ccInput) {
+      ccInput.addEventListener("input", () => updateRecipientHiddenValues("cc"));
+      ccInput.addEventListener("change", () => updateRecipientHiddenValues("cc"));
+    }
+
+    if (bccInput) {
+      bccInput.addEventListener("input", () => updateRecipientHiddenValues("bcc"));
+      bccInput.addEventListener("change", () => updateRecipientHiddenValues("bcc"));
+    }
+  }
+
   async function uploadSelectedFile() {
     const input = byId("attachInput");
     const file = getSelectedFile();
 
     resetUploadState();
-
-    // FIX: make sure latest CC/BCC values are in hidden fields before upload metadata is sent.
     syncRecipientHiddenValues();
 
     if (!file) {
@@ -758,13 +805,10 @@
     renderRecipientGroup("cc", "ccOptionsSource", "defaultCcSource");
     renderRecipientGroup("bcc", "bccOptionsSource", "defaultBccSource");
 
+    attachManualRecipientInputHandlers();
     attachGlobalUiHandlers();
     updateSubmitState();
 
-    const form = getForm();
-
-    // Keep validation disabled as in the current baseline.
-    // Only sync CC/BCC before submit/click so ONDATA receives latest values.
     const replyBtn = getReplyButton();
 
     if (replyBtn) {
@@ -772,16 +816,6 @@
         syncRecipientHiddenValues();
       });
     }
-
-    // if (form) {
-    //   form.addEventListener("submit", validateBeforeSubmit);
-    // } else {
-    //   const replyBtn = getReplyButton();
-    //
-    //   if (replyBtn) {
-    //     replyBtn.addEventListener("click", validateBeforeSubmit);
-    //   }
-    // }
 
     const removeBtn = byId("removeAttachBtn");
 
@@ -792,6 +826,7 @@
 
   window.uploadSelectedFile = uploadSelectedFile;
   window.clearAttachment = clearAttachment;
+  window.syncRecipientHiddenValues = syncRecipientHiddenValues;
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
