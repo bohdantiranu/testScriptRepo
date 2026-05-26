@@ -52,6 +52,7 @@
 
   function setHidden(id, value) {
     const el = byId(id);
+
     if (el) {
       el.value = value == null ? "" : String(value);
     }
@@ -63,6 +64,7 @@
 
   function getRawElementValue(id) {
     const el = byId(id);
+
     if (!el) {
       return "";
     }
@@ -76,6 +78,7 @@
 
   function setStatus(message, color = "#374151") {
     const el = byId("attachmentStatus");
+
     if (!el) {
       return;
     }
@@ -86,6 +89,7 @@
 
   function setRemoveButtonVisible(visible) {
     const btn = byId("removeAttachBtn");
+
     if (btn) {
       btn.style.display = visible ? "inline-block" : "none";
     }
@@ -103,7 +107,10 @@
       return getHidden("uploadOk") === "true";
     }
 
-    return getHidden("uploadOk") === "true" && state.lastUploadedFileSignature === getFileSignature(file);
+    return (
+      getHidden("uploadOk") === "true" &&
+      state.lastUploadedFileSignature === getFileSignature(file)
+    );
   }
 
   function canSubmit() {
@@ -126,11 +133,13 @@
 
   function updateSubmitState() {
     const btn = getReplyButton();
+
     if (!btn) {
       return;
     }
 
     const enabled = canSubmit();
+
     btn.disabled = !enabled;
     btn.style.opacity = enabled ? "1" : "0.7";
     btn.style.cursor = enabled ? "pointer" : "not-allowed";
@@ -143,7 +152,9 @@
     setHidden("mimeType", "");
     setHidden("uploadOk", "false");
     setHidden("uploadError", "");
+
     state.lastUploadedFileSignature = null;
+
     setRemoveButtonVisible(false);
     updateSubmitState();
   }
@@ -155,10 +166,11 @@
     setHidden("mimeType", response?.mimeType || file.type || "");
     setHidden("uploadOk", "true");
     setHidden("uploadError", "");
+
     state.lastUploadedFileSignature = getFileSignature(file);
 
     const input = byId("attachInput");
-    
+
     if (input) {
       input.value = "";
     }
@@ -174,15 +186,16 @@
     setHidden("mimeType", "");
     setHidden("uploadOk", "false");
     setHidden("uploadError", message || "Upload failed");
-    
-    state.lastUploadedFileSignature = getFileSignature(file);
+
+    // FIX: previous version used getFileSignature(file), but file is not defined here.
+    state.lastUploadedFileSignature = null;
 
     const input = byId("attachInput");
-    
+
     if (input) {
       input.value = "";
     }
-    
+
     setRemoveButtonVisible(false);
     updateSubmitState();
   }
@@ -193,11 +206,16 @@
     }
 
     const ext = getFileExtension(file.name);
+
     if (allowedExtensions.size > 0 && !allowedExtensions.has(ext)) {
       return `File type .${ext || "unknown"} is not allowed`;
     }
 
-    if (Number.isFinite(CONFIG.maxFileSizeBytes) && CONFIG.maxFileSizeBytes > 0 && file.size > CONFIG.maxFileSizeBytes) {
+    if (
+      Number.isFinite(CONFIG.maxFileSizeBytes) &&
+      CONFIG.maxFileSizeBytes > 0 &&
+      file.size > CONFIG.maxFileSizeBytes
+    ) {
       const maxMb = Math.round(CONFIG.maxFileSizeBytes / 1024 / 1024);
       return `File is too large. Max size: ${maxMb} MB`;
     }
@@ -216,6 +234,7 @@
 
     if (typeof entry === "string") {
       const raw = entry.trim();
+
       if (!raw) {
         return null;
       }
@@ -223,6 +242,7 @@
       if (raw.includes("|")) {
         const [labelPart, emailPart] = raw.split("|");
         const email = String(emailPart || "").trim();
+
         if (!email) {
           return null;
         }
@@ -242,6 +262,7 @@
     if (typeof entry === "object") {
       const email = String(entry.email || entry.value || entry.address || "").trim();
       const label = String(entry.label || entry.name || email).trim();
+
       if (!email) {
         return null;
       }
@@ -257,12 +278,14 @@
 
   function parseRecipientSource(raw) {
     const normalized = normalizeText(raw);
+
     if (!normalized) {
       return [];
     }
 
     try {
       const parsed = JSON.parse(normalized);
+
       if (Array.isArray(parsed)) {
         return parsed.map(toRecipientItem).filter(Boolean);
       }
@@ -276,7 +299,10 @@
         ? /\s*;\s*/
         : /\s*,\s*/;
 
-    return normalized.split(separator).map(toRecipientItem).filter(Boolean);
+    return normalized
+      .split(separator)
+      .map(toRecipientItem)
+      .filter(Boolean);
   }
 
   function dedupeRecipientItems(items) {
@@ -285,12 +311,17 @@
 
     for (const item of items) {
       const key = String(item.email || "").trim().toLowerCase();
+
       if (!key || seen.has(key)) {
         continue;
       }
 
       seen.add(key);
-      result.push({ label: item.label, email: item.email });
+
+      result.push({
+        label: item.label,
+        email: item.email
+      });
     }
 
     return result;
@@ -298,7 +329,10 @@
 
   function parseDefaultSelectionSet(raw) {
     const items = parseRecipientSource(raw);
-    return new Set(items.map((item) => String(item.email || "").trim().toLowerCase()));
+
+    return new Set(
+      items.map((item) => String(item.email || "").trim().toLowerCase())
+    );
   }
 
   function getSelectedEmailsFromSelect(select) {
@@ -310,6 +344,7 @@
 
   function updateRecipientHiddenValues(kind) {
     const select = byId(`${kind}Select`);
+
     if (!select) {
       return;
     }
@@ -320,23 +355,32 @@
     setHidden(`${kind}EmailsJson`, emails.length > 0 ? JSON.stringify(emails) : "[]");
 
     const summary = byId(`${kind}SelectedSummary`);
+
     if (summary) {
-      summary.textContent = emails.length === 0
-        ? "No recipients selected"
-        : `Selected (${emails.length}): ${emails.join(", ")}`;
+      summary.textContent =
+        emails.length === 0
+          ? "No recipients selected"
+          : `Selected (${emails.length}): ${emails.join(", ")}`;
     }
 
     updateMultiSelectToggleText(kind);
     syncMultiSelectChecks(kind);
   }
 
+  function syncRecipientHiddenValues() {
+    updateRecipientHiddenValues("cc");
+    updateRecipientHiddenValues("bcc");
+  }
+
   function updateMultiSelectToggleText(kind) {
     const instance = state.multiSelectInstances[kind];
+
     if (!instance) {
       return;
     }
 
     const emails = getSelectedEmailsFromSelect(instance.select);
+
     if (emails.length === 0) {
       instance.toggle.textContent = instance.placeholder;
       return;
@@ -352,12 +396,18 @@
 
   function syncMultiSelectChecks(kind) {
     const instance = state.multiSelectInstances[kind];
+
     if (!instance) {
       return;
     }
 
-    const selected = new Set(getSelectedEmailsFromSelect(instance.select).map((email) => email.toLowerCase()));
-    const checkboxes = instance.optionsRoot.querySelectorAll("input[type='checkbox'][data-email]");
+    const selected = new Set(
+      getSelectedEmailsFromSelect(instance.select).map((email) => email.toLowerCase())
+    );
+
+    const checkboxes = instance.optionsRoot.querySelectorAll(
+      "input[type='checkbox'][data-email]"
+    );
 
     checkboxes.forEach((checkbox) => {
       checkbox.checked = selected.has(String(checkbox.dataset.email || "").toLowerCase());
@@ -375,6 +425,7 @@
   function createMultiSelectUi(kind, placeholder) {
     const select = byId(`${kind}Select`);
     const host = byId(`${kind}MultiSelectHost`);
+
     if (!select || !host) {
       return;
     }
@@ -417,6 +468,7 @@
         checkbox.type = "checkbox";
         checkbox.dataset.email = option.value;
         checkbox.checked = option.selected;
+
         checkbox.addEventListener("change", () => {
           option.selected = checkbox.checked;
           select.dispatchEvent(new Event("change", { bubbles: true }));
@@ -434,6 +486,7 @@
     search.addEventListener("input", () => {
       const query = search.value.trim().toLowerCase();
       const rows = optionsRoot.querySelectorAll(".ms-option");
+
       rows.forEach((row) => {
         const matches = !query || String(row.dataset.filterText || "").includes(query);
         row.hidden = !matches;
@@ -442,9 +495,12 @@
 
     toggle.addEventListener("click", (event) => {
       event.preventDefault();
+
       const shouldOpen = panel.hidden;
+
       closeAllMultiSelectPanels(shouldOpen ? kind : "");
       panel.hidden = !shouldOpen;
+
       if (shouldOpen) {
         search.focus();
       }
@@ -452,8 +508,10 @@
 
     panel.appendChild(search);
     panel.appendChild(optionsRoot);
+
     wrapper.appendChild(toggle);
     wrapper.appendChild(panel);
+
     host.appendChild(wrapper);
 
     state.multiSelectInstances[kind] = {
@@ -472,26 +530,40 @@
 
   function renderRecipientGroup(kind, sourceId, defaultsId) {
     const select = byId(`${kind}Select`);
+
     if (!select) {
       return;
     }
 
-    const options = dedupeRecipientItems(parseRecipientSource(getRawElementValue(sourceId)));
-    const defaultSelections = parseDefaultSelectionSet(getRawElementValue(defaultsId));
+    // FIX: JS treats this select as multi-select, so enforce multiple mode.
+    select.multiple = true;
+
+    const options = dedupeRecipientItems(
+      parseRecipientSource(getRawElementValue(sourceId))
+    );
+
+    const defaultSelections = parseDefaultSelectionSet(
+      getRawElementValue(defaultsId)
+    );
 
     select.innerHTML = "";
 
     options.forEach((option) => {
       const item = document.createElement("option");
+
       item.value = option.email;
-      item.textContent = option.label === option.email
-        ? option.email
-        : `${option.label} (${option.email})`;
+      item.textContent =
+        option.label === option.email
+          ? option.email
+          : `${option.label} (${option.email})`;
+
       item.selected = defaultSelections.has(option.email.toLowerCase());
+
       select.appendChild(item);
     });
 
     select.addEventListener("change", () => updateRecipientHiddenValues(kind));
+
     createMultiSelectUi(kind, kind.toUpperCase());
     updateRecipientHiddenValues(kind);
   }
@@ -502,58 +574,75 @@
 
     resetUploadState();
 
+    // FIX: make sure latest CC/BCC values are in hidden fields before upload metadata is sent.
+    syncRecipientHiddenValues();
+
     if (!file) {
       setStatus("No file selected", "#374151");
       return;
     }
 
     const validationError = validateSelectedFile(file);
+
     if (validationError) {
       setUploadFailure(validationError);
       setStatus(validationError, "#b91c1c");
+
       if (input) {
         input.value = "";
       }
+
       return;
     }
 
     state.uploadInProgress = true;
     updateSubmitState();
+
     setStatus(`Uploading ${file.name}...`, "#2563eb");
 
     const formData = new FormData();
+
     formData.append("file", file, file.name);
     formData.append("source", "cxone-runapp");
     formData.append("originalFileName", file.name);
     formData.append("bodyTextLength", String((byId("bodyText")?.value || "").length));
 
     const ticketId = getHidden("ticketId");
+
     if (ticketId) {
       formData.append("ticketId", ticketId);
     }
 
     const ccEmails = getHidden("ccEmails");
+
     if (ccEmails) {
       formData.append("ccEmails", ccEmails);
     }
 
     const bccEmails = getHidden("bccEmails");
+
     if (bccEmails) {
       formData.append("bccEmails", bccEmails);
     }
 
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), CONFIG.requestTimeoutMs);
+    const timeoutId = window.setTimeout(
+      () => controller.abort(),
+      CONFIG.requestTimeoutMs
+    );
 
     try {
       const response = await fetch(CONFIG.uploadUrl, {
         method: "POST",
         body: formData,
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json"
+        },
         signal: controller.signal
       });
 
       const rawText = await response.text();
+
       let data = null;
 
       if (rawText) {
@@ -565,7 +654,12 @@
       }
 
       if (!response.ok) {
-        throw new Error(data?.message || data?.error || rawText || `Upload failed with status ${response.status}`);
+        throw new Error(
+          data?.message ||
+          data?.error ||
+          rawText ||
+          `Upload failed with status ${response.status}`
+        );
       }
 
       if (!data?.uploadToken) {
@@ -575,15 +669,18 @@
       setUploadSuccess(file, data);
       setStatus(`Attached: ${file.name}`, "#15803d");
     } catch (err) {
-      const message = err?.name === "AbortError"
-        ? "Upload timed out. Please try again."
-        : err?.message || "Upload failed";
+      const message =
+        err?.name === "AbortError"
+          ? "Upload timed out. Please try again."
+          : err?.message || "Upload failed";
 
       setUploadFailure(message);
       setStatus(`Upload error: ${message}`, "#b91c1c");
+
       console.error("Attachment upload failed:", err);
     } finally {
       window.clearTimeout(timeoutId);
+
       state.uploadInProgress = false;
       updateSubmitState();
     }
@@ -596,6 +693,7 @@
     }
 
     const input = byId("attachInput");
+
     if (input) {
       input.value = "";
     }
@@ -606,37 +704,40 @@
 
   // function validateBeforeSubmit(event) {
   //   setHidden("attachmentRequired", CONFIG.requireAttachment ? "true" : "false");
-
+  //
   //   if (!getHidden("ticketId")) {
   //     event.preventDefault();
   //     setStatus("Ticket ID is missing", "#b91c1c");
   //     return false;
   //   }
-
+  //
   //   if (state.uploadInProgress) {
   //     event.preventDefault();
   //     setStatus("Please wait until the attachment upload is finished", "#b91c1c");
   //     return false;
   //   }
-
+  //
   //   if (CONFIG.requireAttachment && !isCurrentFileUploaded()) {
   //     event.preventDefault();
   //     setStatus("Attachment is required before submit", "#b91c1c");
   //     return false;
   //   }
-
+  //
   //   if (getSelectedFile() && !isCurrentFileUploaded()) {
   //     event.preventDefault();
   //     setStatus("Selected file was not uploaded successfully", "#b91c1c");
   //     return false;
   //   }
-
+  //
   //   return true;
   // }
 
   function attachGlobalUiHandlers() {
     document.addEventListener("click", (event) => {
-      const clickedInside = Object.values(state.multiSelectInstances).some((instance) => instance.wrapper.contains(event.target));
+      const clickedInside = Object.values(state.multiSelectInstances).some(
+        (instance) => instance.wrapper.contains(event.target)
+      );
+
       if (!clickedInside) {
         closeAllMultiSelectPanels();
       }
@@ -656,20 +757,34 @@
 
     renderRecipientGroup("cc", "ccOptionsSource", "defaultCcSource");
     renderRecipientGroup("bcc", "bccOptionsSource", "defaultBccSource");
+
     attachGlobalUiHandlers();
     updateSubmitState();
 
     const form = getForm();
+
+    // Keep validation disabled as in the current baseline.
+    // Only sync CC/BCC before submit/click so ONDATA receives latest values.
+    const replyBtn = getReplyButton();
+
+    if (replyBtn) {
+      replyBtn.addEventListener("click", () => {
+        syncRecipientHiddenValues();
+      });
+    }
+
     // if (form) {
     //   form.addEventListener("submit", validateBeforeSubmit);
     // } else {
     //   const replyBtn = getReplyButton();
+    //
     //   if (replyBtn) {
     //     replyBtn.addEventListener("click", validateBeforeSubmit);
     //   }
     // }
 
     const removeBtn = byId("removeAttachBtn");
+
     if (removeBtn) {
       removeBtn.addEventListener("click", clearAttachment);
     }
