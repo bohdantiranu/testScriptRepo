@@ -2,7 +2,7 @@
   "use strict";
 
   const CONFIG = Object.freeze({
-    uploadUrl: "https://middle.wow24-7.net/api/uploads",
+    uploadUrl: "https://middle-bk.wow24-7.net/api/uploads",//"https://middle.wow24-7.net/api/uploads",
     requireAttachment: false,
     maxFileSizeBytes: 20 * 1024 * 1024,
     requestTimeoutMs: 60_000,
