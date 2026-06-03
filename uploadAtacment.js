@@ -7,16 +7,28 @@
     maxFileSizeBytes: 20 * 1024 * 1024,
     requestTimeoutMs: 60_000,
     allowedExtensions: [
-      "pdf",
-      "png",
+      "zip",
+      "rar",
+      "7z",
+      "tar",
+      "gz",
       "jpg",
       "jpeg",
+      "png",
+      "gif",
+      "webp",
+      "bmp",
+      "tiff",
+      "heic",
+      "pdf",
       "doc",
       "docx",
+      "txt",
       "xls",
       "xlsx",
-      "txt",
-      "csv"
+      "csv",
+      "ppt",
+      "pptx"
     ]
   });
 
