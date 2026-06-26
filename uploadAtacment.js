@@ -158,7 +158,7 @@
   }
 
   function resetUploadState() {
-    setHidden("uploadToken", "");
+    //setHidden("uploadToken", "");
     setHidden("fileName", "");
     setHidden("fileSize", "");
     setHidden("mimeType", "");
@@ -172,7 +172,7 @@
   }
 
   function setUploadSuccess(file, response) {
-    setHidden("uploadToken", response?.uploadToken || "");
+    //setHidden("uploadToken", response?.uploadToken || "");
     setHidden("fileName", response?.fileName || file.name || "");
     setHidden("fileSize", response?.fileSize || file.size || "");
     setHidden("mimeType", response?.mimeType || file.type || "");
@@ -192,7 +192,7 @@
   }
 
   function setUploadFailure(message) {
-    setHidden("uploadToken", "");
+    //setHidden("uploadToken", "");
     setHidden("fileName", "");
     setHidden("fileSize", "");
     setHidden("mimeType", "");
@@ -664,31 +664,39 @@
     formData.append("file", file, file.name);
     formData.append("source", "cxone-runapp");
     formData.append("originalFileName", file.name);
-    formData.append("bodyTextLength", String((byId("bodyText")?.value || "").length));
 
     const ticketId = getHidden("ticketId");
+    const replySessionToken = getHidden("replySessionToken");
 
-    if (ticketId) {
-      formData.append("ticketId", ticketId);
+    if (!ticketId) {
+      const message = "Ticket ID is missing";
+      setUploadFailure(message);
+      setStatus(message, "#b91c1c");
+      return;
     }
 
-    const ccEmails = getHidden("ccEmails");
-
-    if (ccEmails) {
-      formData.append("ccEmails", ccEmails);
+    if (!replySessionToken) {
+      const message = "Reply session token is missing";
+      setUploadFailure(message);
+      setStatus(message, "#b91c1c");
+      return;
     }
 
-    const bccEmails = getHidden("bccEmails");
-
-    if (bccEmails) {
-      formData.append("bccEmails", bccEmails);
-    }
+    formData.append("ticketId", ticketId);
+    formData.append("ReplySessionToken", replySessionToken);
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(
       () => controller.abort(),
       CONFIG.requestTimeoutMs
     );
+
+    console.log("Uploading attachment", {
+      fileName: file.name,
+      ticketId,
+      hasReplySessionToken: !!replySessionToken,
+      replySessionTokenLength: replySessionToken.length
+    });
 
     try {
       const response = await fetch(CONFIG.uploadUrl, {
@@ -721,8 +729,8 @@
         );
       }
 
-      if (!data?.uploadToken) {
-        throw new Error("Middleware response does not contain uploadToken");
+      if (data?.uploadOk !== true) {
+        throw new Error("Middleware response does not confirm successful upload");
       }
 
       setUploadSuccess(file, data);
